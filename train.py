@@ -19,11 +19,12 @@ import random
 from sys import argv
 from collections import Counter
 import os
+import argparse
 
 L1_layer = Lambda(lambda tensor:K.abs(tensor[0] - tensor[1]))
 kmetrics={"class_output":['acc',f1score]}
 
-NUM_EPOCHS = 10
+NUM_EPOCHS = 50
 nchannels=3 #number of channels
 # image_size_w_c = 224 #image´s width for vehicle´s shape
 # image_size_h_c = 224 #image´s height for vehicle´s shape
@@ -185,10 +186,13 @@ train_augs = [[],[]]
 test_augs = [[],[]]
 tam_max = 3
 data = None
-if os.name == 'nt':
-    data = json.load(open('dataset_test_images_windows.json'))
-else:
-    data = json.load(open('dataset_test_images.json'))
+
+parser = argparse.ArgumentParser(description='Generate json file for training')
+parser.add_argument('-i','--input', help='Path of dataset json file', required=True)
+args = vars(parser.parse_args())
+
+dataset_file = args['input']
+data = json.load(open(dataset_file))
 
 seq_car = albu.Compose(
     [
