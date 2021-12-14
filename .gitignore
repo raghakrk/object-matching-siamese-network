@@ -2,6 +2,7 @@ dataset
 __pycache__
 env
 wenv
+venv
 inferences_output.txt
 *.h5
 lambda-tensorflow-sample/*.h5
