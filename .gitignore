@@ -5,3 +5,4 @@ wenv
 inferences_output.txt
 *.h5
 lambda-tensorflow-sample/*.h5
+*.json
