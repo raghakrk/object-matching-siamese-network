@@ -21,10 +21,18 @@ from collections import Counter
 import os
 import argparse
 
+parser = argparse.ArgumentParser(description='Generate json file for training')
+parser.add_argument('-i','--input', help='Path of dataset json file', required=True)
+parser.add_argument('-e','--epochs', type = int, default = 10, help='number of epochs')
+
+args = vars(parser.parse_args())
+NUM_EPOCHS = args['epochs']
+dataset_file = args['input']
+data = json.load(open(dataset_file))
+
 L1_layer = Lambda(lambda tensor:K.abs(tensor[0] - tensor[1]))
 kmetrics={"class_output":['acc',f1score]}
 
-NUM_EPOCHS = 50
 nchannels=3 #number of channels
 # image_size_w_c = 224 #image´s width for vehicle´s shape
 # image_size_h_c = 224 #image´s height for vehicle´s shape
@@ -177,7 +185,7 @@ def test_report(model_name, model, test_gen):
     a.close()
     print('tp: %d, tn: %d, fp: %d, fn: %d P:%0.2f R:%0.2f F:%0.2f A:%0.2f' % calculate_metrics(ytrue, ypred))
 
-keys = ['bellevue', 'sm_1401', 'sm_2309', 'sm_2400', 'sm_2645', 'sm_319', 'sm_prod']
+keys = list(data.keys())
 input2 = (image_size_h_c,image_size_w_c,nchannels)
 # model = resnet6
 model = GoogLeNet
@@ -185,14 +193,6 @@ name = 'GoogLeNet'
 train_augs = [[],[]]
 test_augs = [[],[]]
 tam_max = 3
-data = None
-
-parser = argparse.ArgumentParser(description='Generate json file for training')
-parser.add_argument('-i','--input', help='Path of dataset json file', required=True)
-args = vars(parser.parse_args())
-
-dataset_file = args['input']
-data = json.load(open(dataset_file))
 
 seq_car = albu.Compose(
     [
