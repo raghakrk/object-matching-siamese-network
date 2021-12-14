@@ -24,9 +24,6 @@ def inception_module(x, params, data_format, concat_axis,
                      subsample=(1, 1), activation='relu',
                      border_mode='same', weight_decay=None):
 
-    # https://gist.github.com/nervanazoo/2e5be01095e935e90dd8  #
-    # file-googlenet_neon-py
-
     (branch1, branch2, branch3, branch4) = params
 
     if weight_decay:
