@@ -151,7 +151,7 @@ def calculate_metrics(ytrue1, ypred1):
 #------------------------------------------------------------------------------
 def test_report(model_name, model, test_gen):
     print("=== Evaluating model: {:s} ===".format(model_name))
-    a = open("inferences_output.txt", "w")
+    a = open("inferences_output_{}.txt".format(model_name), "w")
     ytrue, ypred = [], []
     for i in range(len(test_gen)):
       X, Y, paths = test_gen[i]
