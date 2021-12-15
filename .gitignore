@@ -3,7 +3,7 @@ __pycache__
 env
 wenv
 venv
-inferences_output.txt
+*.txt
 *.h5
 lambda-tensorflow-sample/*.h5
 *.json
