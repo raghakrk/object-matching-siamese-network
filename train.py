@@ -21,26 +21,6 @@ from collections import Counter
 import os
 import argparse
 
-parser = argparse.ArgumentParser(description='Generate json file for training')
-parser.add_argument('-i','--input', help='Path of dataset json file', required=True)
-parser.add_argument('-e','--epochs', type = int, default = 10, help='number of epochs')
-
-args = vars(parser.parse_args())
-NUM_EPOCHS = args['epochs']
-dataset_file = args['input']
-data = json.load(open(dataset_file))
-
-L1_layer = Lambda(lambda tensor:K.abs(tensor[0] - tensor[1]))
-kmetrics={"class_output":['acc',f1score]}
-
-nchannels=3 #number of channels
-# image_size_w_c = 224 #image´s width for vehicle´s shape
-# image_size_h_c = 224 #image´s height for vehicle´s shape
-# batch_size = 8
-image_size_h_c = 112
-image_size_w_c = 112
-batch_size = 32
-
 def load_img(img, vec_size):
   iplt0 = process_load(img[0][0], vec_size)
   iplt1 = process_load(img[1][0], vec_size)
@@ -69,8 +49,8 @@ def fold(list1, ind, train=False):
 class SiameseSequence(Sequence):
     def __init__(self,features, 
                 augmentations,
-                batch_size=batch_size,
-                input2=(image_size_h_c,image_size_w_c,nchannels), 
+                batch_size,
+                input2, 
                 type1=None,
                 metadata_dict=None, 
                 metadata_length=0, 
@@ -134,6 +114,7 @@ def siamese_model(model, input2):
     inputs = [left_input_C, right_input_C]
 
     # Add the distance function to the network
+    L1_layer = Lambda(lambda tensor:K.abs(tensor[0] - tensor[1]))
     x = L1_layer([encoded_l_C, encoded_r_C])
     x = Dense(512, activation='relu')(x)
     x = Dropout(0.5)(x)
@@ -148,7 +129,7 @@ def siamese_model(model, input2):
     }
 
     lossWeights = {"class_output": 1.0, "reg_output": 1.0}
-
+    kmetrics={"class_output":['acc',f1score]}
     model = Model(inputs=inputs, outputs=[predF2, regF2])
     model.compile(loss=losses, loss_weights=lossWeights,optimizer=optimizer, metrics=kmetrics)
 
@@ -185,53 +166,102 @@ def test_report(model_name, model, test_gen):
     a.close()
     print('tp: %d, tn: %d, fp: %d, fn: %d P:%0.2f R:%0.2f F:%0.2f A:%0.2f' % calculate_metrics(ytrue, ypred))
 
-keys = list(data.keys())
-input2 = (image_size_h_c,image_size_w_c,nchannels)
-# model = resnet6
-model = GoogLeNet
-name = 'GoogLeNet'
-train_augs = [[],[]]
-test_augs = [[],[]]
-tam_max = 3
+if __name__=='__main__':
+    parser = argparse.ArgumentParser(description='Generate json file for training')
+    parser.add_argument('-i','--input', help='Path of dataset json file', required=True)
+    parser.add_argument('-e','--epochs', type = int, default = 10, help='number of epochs')
+    parser.add_argument('-s','--save-model', type=bool, default=True)
+    parser.add_argument(
+        '-m',
+        '--model-arch',
+        type=str,
+        default='resnet6',
+        help="Enter model type from the following: 'resnet6'(default), 'resnet8', 'resnet50', 'vgg16', 'googlenet'"
+    )
 
-seq_car = albu.Compose(
-    [
-        albu.IAACropAndPad(px=(0, 8)),
-        albu.IAAAffine(
-        scale=(0.8, 1.2),
-                shear=(-8, 8),
-        order=[0,1],
-        cval=(0),
-        mode='constant'),
+    args = vars(parser.parse_args())
+    num_epochs = args['epochs']
+    dataset_file = args['input']
+    save_model = args['save_model']
+    model_name = args['model_arch']
+    nchannels = 3
+    if model_name not in ['resnet6', 'resnet8', 'resnet50', 'vgg16', 'googlenet']:
+        raise Exception('invalid modeltype'.format(model_name))
+
+    if model_name == 'resnet50':
+        model = resnet50_model
+        image_size_h_c = 224
+        image_size_w_c = 224
+        batch_size = 8
+    elif model_name == 'vgg16':
+        model = vgg16_model
+        image_size_h_c = 224
+        image_size_w_c = 224
+        batch_size = 8
+    elif model_name == 'resnet8':
+        model = resnet8
+        image_size_h_c = 128
+        image_size_w_c = 128
+        batch_size = 128
+    elif model_name == 'resnet6':
+        model = resnet6
+        image_size_h_c = 128
+        image_size_w_c = 128
+        batch_size = 128
+    elif model_name == 'googlenet':
+        model = GoogLeNet
+        image_size_h_c = 112
+        image_size_w_c = 112
+        batch_size = 32
+
+    data = json.load(open(dataset_file))
+
+    keys = list(data.keys())
+    input2 = (image_size_h_c,image_size_w_c,nchannels)
+    # model = resnet6
+    train_augs = [[],[]]
+    test_augs = [[],[]]
+    tam_max = 3
+
+    seq_car = albu.Compose(
+        [
+            albu.IAACropAndPad(px=(0, 8)),
+            albu.IAAAffine(
+            scale=(0.8, 1.2),
+                    shear=(-8, 8),
+            order=[0,1],
+            cval=(0),
+            mode='constant'),
+            albu.ToFloat(max_value=255)
+        ],p=0.7
+    )
+    AUGMENTATIONS_TEST = albu.Compose([
         albu.ToFloat(max_value=255)
-    ],p=0.7
-)
-AUGMENTATIONS_TEST = albu.Compose([
-    albu.ToFloat(max_value=255)
-])
+    ])
 
-for i in range(tam_max):
-    train_augs[0].append(seq_car)
-    train_augs[1].append(seq_car)
-    test_augs[0].append(AUGMENTATIONS_TEST)
-    test_augs[1].append(AUGMENTATIONS_TEST)
+    for i in range(tam_max):
+        train_augs[0].append(seq_car)
+        train_augs[1].append(seq_car)
+        test_augs[0].append(AUGMENTATIONS_TEST)
+        test_augs[1].append(AUGMENTATIONS_TEST)
 
-random.shuffle(keys)
-val = data[keys[0]]
-trn=[]
-for i in range(1,len(keys)):
-    trn += data[keys[i]]
-trnGen = SiameseSequence(trn, train_augs,batch_size=batch_size,input2=input2, type1='car')
-tstGen = SiameseSequence(val, test_augs,batch_size=batch_size,input2=input2, type1='car')
-siamese_net = siamese_model(model, input2)
+    random.shuffle(keys)
+    val = data[keys[0]]
+    trn=[]
+    for i in range(1,len(keys)):
+        trn += data[keys[i]]
+    trnGen = SiameseSequence(trn, train_augs,batch_size=batch_size,input2=input2, type1='car')
+    tstGen = SiameseSequence(val, test_augs,batch_size=batch_size,input2=input2, type1='car')
+    siamese_net = siamese_model(model, input2)
 
-f1 = 'model_shape_%s.h5' % (name)
+    f1 = 'model_shape_%s.h5' % (model_name)
 
-#fit model
-history = siamese_net.fit_generator(trnGen,
-                            epochs=NUM_EPOCHS,
-                            validation_data=tstGen)
-#validate plate model
-tstGen2 = SiameseSequence(val, None, batch_size=batch_size,input2=input2, with_paths=True, type1='car')
-test_report('validation_shape_%s' % name,siamese_net, tstGen2)
-siamese_net.save(f1)
+    #fit model
+    history = siamese_net.fit_generator(trnGen,
+                                epochs=num_epochs,
+                                validation_data=tstGen)
+    #validate plate model
+    tstGen2 = SiameseSequence(val, None, batch_size=batch_size,input2=input2, with_paths=True, type1='car')
+    test_report('validation_shape_%s' % model_name,siamese_net, tstGen2)
+    if save_model:
+        siamese_net.save(f1)
