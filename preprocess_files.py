@@ -22,6 +22,7 @@ if __name__ == '__main__':
         sub_folder_name = os.path.join(folder_name, key)
         uuid_file_map = {}
         file_uuid_map = {}
+        sub_pos = 0
         for path in Path(sub_folder_name).rglob('*.jpg'):
             items = path.name.split('__')
             if "Crop" not in items[4] or "BBox" in items[4]:
@@ -40,10 +41,10 @@ if __name__ == '__main__':
             for pair in combination:
                 set_list.append([[pair[0]], [pair[1]], 1])
                 pos+=1
+                sub_pos+=1
         test_files = [*file_uuid_map]
         combination = list(itertools.combinations(test_files, 2))
-        combination_len = len(test_files)/2
-        random_combination = random.sample(combination, 200)
+        random_combination = random.sample(combination, sub_pos)
         for path1, path2 in random_combination:
             if file_uuid_map[path1] == file_uuid_map[path2]:
                 continue
