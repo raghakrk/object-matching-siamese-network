@@ -20,6 +20,7 @@ from sys import argv
 from collections import Counter
 import os
 import argparse
+import time
 
 def load_img(img, vec_size):
   iplt0 = process_load(img[0][0], vec_size)
@@ -253,9 +254,6 @@ if __name__=='__main__':
     trnGen = SiameseSequence(trn, train_augs,batch_size=batch_size,input2=input2, type1='car')
     tstGen = SiameseSequence(val, test_augs,batch_size=batch_size,input2=input2, type1='car')
     siamese_net = siamese_model(model, input2)
-
-    f1 = 'model_shape_%s.h5' % (model_name)
-
     #fit model
     history = siamese_net.fit_generator(trnGen,
                                 epochs=num_epochs,
@@ -263,5 +261,7 @@ if __name__=='__main__':
     #validate plate model
     tstGen2 = SiameseSequence(val, None, batch_size=batch_size,input2=input2, with_paths=True, type1='car')
     test_report('validation_shape_%s' % model_name,siamese_net, tstGen2)
+    timestr = time.strftime("%Y%m%d-%H%M%S")
+    f1 = 'model_shape_{}_{}.h5'.format(model_name, timestr)
     if save_model:
         siamese_net.save(f1)
