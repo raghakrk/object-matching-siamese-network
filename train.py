@@ -1,6 +1,8 @@
 import numpy as np
 import tensorflow
 from utils import resnet6, resnet8, resnet50_model, vgg16_model, GoogLeNet
+from tensorflow.compat.v1 import ConfigProto
+from tensorflow.compat.v1 import InteractiveSession
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras import backend as K
 from tensorflow.keras.layers import Dense, Dropout, Lambda
@@ -21,6 +23,10 @@ from collections import Counter
 import os
 import argparse
 import time
+
+config = ConfigProto()
+config.gpu_options.allow_growth = True
+session = InteractiveSession(config=config)
 
 def load_img(img, vec_size):
   iplt0 = process_load(img[0][0], vec_size)
