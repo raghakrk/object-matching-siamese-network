@@ -29,14 +29,14 @@ config.gpu_options.allow_growth = True
 session = InteractiveSession(config=config)
 
 def load_img(img, vec_size):
-  iplt0 = process_load(img[0][0], vec_size)
-  iplt1 = process_load(img[1][0], vec_size)
+  iplt0 = process_load(img[0], vec_size)
+  iplt1 = process_load(img[1], vec_size)
 
   d1 = {"i0":iplt0,
         "i1":iplt1,
         "l":img[2],
-        "p1":img[0][0],
-        "p2":img[1][0],
+        "p1":img[0],
+        "p2":img[1],
         }
   return d1
 
@@ -219,7 +219,7 @@ if __name__=='__main__':
         model = GoogLeNet
         image_size_h_c = 112
         image_size_w_c = 112
-        batch_size = 32
+        batch_size = 128
 
     data = json.load(open(dataset_file))
 

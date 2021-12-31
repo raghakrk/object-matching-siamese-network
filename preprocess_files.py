@@ -39,7 +39,7 @@ if __name__ == '__main__':
         for tracker_uuid, files in uuid_file_map.items():
             combination = list(itertools.combinations(files, 2))
             for pair in combination:
-                set_list.append([[pair[0]], [pair[1]], 1])
+                set_list.append([pair[0], pair[1], 1])
                 pos+=1
                 sub_pos+=1
         test_files = [*file_uuid_map]
@@ -49,7 +49,7 @@ if __name__ == '__main__':
             if file_uuid_map[path1] == file_uuid_map[path2]:
                 continue
             else:
-                set_list.append([[path1], [path2], 0])
+                set_list.append([path1, path2, 0])
                 neg+=1
             random.shuffle(set_list)
             key_dict[key] = set_list
