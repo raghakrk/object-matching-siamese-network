@@ -285,3 +285,26 @@ def vgg16_model(input_shape):
   #for layer in baseModel.layers:
   #  layer.trainable = False
   return baseModel
+
+def small_vgg(input_shape):
+    input1 = Input(input_shape)
+    x = Conv2D(64, (3, 3), activation='relu', padding='same',name='block1_conv1')(input1)
+    x = MaxPooling2D((2, 2), strides=(2, 2), name='block1_pool')(x)
+
+    x = Conv2D(128, (3, 3), activation='relu', padding='same',name='block2_conv1')(x)
+    x = MaxPooling2D((2, 2), strides=(2, 2), name='block2_pool')(x)
+
+    # Block 2
+    x = Conv2D(128, (3, 3), activation='relu', padding='same',name='block3_conv1')(x)
+    x = MaxPooling2D((2, 2), strides=(2, 2), name='block3_pool')(x)
+
+    # Block 3
+    x = Conv2D(256, (3, 3), activation='relu', padding='same',name='block4_conv1')(x)
+    x = MaxPooling2D((2, 2), strides=(2, 2), name='block4_pool')(x)
+
+    x = Conv2D(512, (3, 3), activation='relu', padding='same',name='block5_conv1')(x)
+    x = MaxPooling2D((2, 2), strides=(2, 2), name='block5_pool')(x)
+
+    x = Flatten()(x)
+
+    return Model(input1,x)
