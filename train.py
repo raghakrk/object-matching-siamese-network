@@ -1,6 +1,6 @@
 import numpy as np
 import tensorflow
-from utils import resnet6, resnet8, resnet50_model, vgg16_model, GoogLeNet
+from utils import resnet6, resnet8, resnet50_model, vgg16_model, GoogLeNet, small_vgg
 from tensorflow.compat.v1 import ConfigProto
 from tensorflow.compat.v1 import InteractiveSession
 from tensorflow.keras.optimizers import Adam
@@ -182,8 +182,8 @@ if __name__=='__main__':
         '-m',
         '--model-arch',
         type=str,
-        default='resnet6',
-        help="Enter model type from the following: 'resnet6'(default), 'resnet8', 'resnet50', 'vgg16', 'googlenet'"
+        default='smallvgg',
+        help="Enter model type from the following: 'resnet6'(default), 'resnet8', 'resnet50', 'vgg16', 'googlenet', 'smallvgg'"
     )
 
     args = vars(parser.parse_args())
@@ -192,7 +192,7 @@ if __name__=='__main__':
     save_model = args['save_model']
     model_name = args['model_arch']
     nchannels = 3
-    if model_name not in ['resnet6', 'resnet8', 'resnet50', 'vgg16', 'googlenet']:
+    if model_name not in ['resnet6', 'resnet8', 'resnet50', 'vgg16', 'googlenet', 'smallvgg']:
         raise Exception('invalid modeltype'.format(model_name))
 
     if model_name == 'resnet50':
@@ -220,7 +220,12 @@ if __name__=='__main__':
         image_size_h_c = 112
         image_size_w_c = 112
         batch_size = 128
-
+    elif model_name=='smallvgg':
+        model = small_vgg
+        image_size_w_c = 64
+        image_size_h_c = 64
+        batch_size = 128
+    
     data = json.load(open(dataset_file))
 
     keys = list(data.keys())
