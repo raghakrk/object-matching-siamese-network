@@ -246,16 +246,17 @@ if __name__=='__main__':
         albu.ToFloat(max_value=255)
     ])
 
-    for i in range(tam_max):
-        train_augs[0].append(seq_car)
-        train_augs[1].append(seq_car)
-        test_augs[0].append(AUGMENTATIONS_TEST)
-        test_augs[1].append(AUGMENTATIONS_TEST)
+    # for i in range(tam_max):
+    train_augs[0].append(seq_car)
+    train_augs[1].append(seq_car)
+    test_augs[0].append(AUGMENTATIONS_TEST)
+    test_augs[1].append(AUGMENTATIONS_TEST)
 
     random.shuffle(keys)
     val = data[keys[0]]
+    test = data[keys[1]]
     trn=[]
-    for i in range(1,len(keys)):
+    for i in range(2,len(keys)):
         trn += data[keys[i]]
     trnGen = SiameseSequence(trn, train_augs,batch_size=batch_size,input2=input2, type1='car')
     tstGen = SiameseSequence(val, test_augs,batch_size=batch_size,input2=input2, type1='car')
@@ -265,7 +266,7 @@ if __name__=='__main__':
                                 epochs=num_epochs,
                                 validation_data=tstGen)
     #validate plate model
-    tstGen2 = SiameseSequence(val, None, batch_size=batch_size,input2=input2, with_paths=True, type1='car')
+    tstGen2 = SiameseSequence(test, None, batch_size=batch_size,input2=input2, with_paths=True, type1='car')
     test_report('validation_shape_%s' % model_name,siamese_net, tstGen2)
     timestr = time.strftime("%Y%m%d-%H%M%S")
     f1 = 'model_shape_{}_{}.h5'.format(model_name, timestr)
